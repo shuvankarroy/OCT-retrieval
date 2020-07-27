@@ -158,16 +158,16 @@ def driver(rootdir):
     siamese_model.summary()
     
     for subdir1, dirs1, files1 in os.walk(rootdir):
-        destination = "..\\result\\" # + subdir1.split("\\")[-1]
+        destination = "..\\result-new\\" # + subdir1.split("\\")[-1]
         query1  = subdir1.split("\\")[-1]
         
         #os.makedirs(destination, exist_ok=True)
         
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
         
-        if not subdir1.endswith("\\Duke-selected\\"):
+        if not subdir1.endswith("\\Duke-selected-new\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-selected\\"):
+                if not subdir2.endswith("\\Duke-selected-new\\"):
                     if (subdir1 != subdir2):
                         query2  = subdir2.split("\\")[-1]
                         print(subdir1, subdir2)
@@ -202,7 +202,7 @@ def driver(rootdir):
     print("return value : {}".format(compare(siamese_model, img1, img2)))
     '''
 if __name__ == "__main__":
-    driver("H:\\OCT retrieval\\Dataset\\Duke-selected\\")
+    driver("H:\\OCT retrieval\\Dataset\\Duke-selected-new\\")
 
-# reporting end of program execution by beep sound
-winsound.Beep(2500, 4000)
+    # reporting end of program execution by beep sound
+    winsound.Beep(2500, 4000)
