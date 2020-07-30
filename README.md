@@ -1,2 +1,2 @@
 # OCT-retrieval
-Private repo for OCT retrieval based onsiamese net
+Private repo for OCT retrieval based on siamese net
