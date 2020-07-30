@@ -102,7 +102,7 @@ def get_siamese(input_shape):
     conv5 = Dropout(0.2)(conv5)
     conv5 = Conv2D(32, (3, 3), activation='relu', padding='same',data_format='channels_first',
                     kernel_initializer=initialize_weights, bias_initializer=initialize_bias, kernel_regularizer=l2(2e-4))(conv5)
-    conv5 = Flatten()(conv5)
+    #conv5 = Flatten()(conv5)
     model = Model(inputs=inputs, outputs=conv5)
     # upto conv2d_9
 
@@ -111,8 +111,23 @@ def get_siamese(input_shape):
     encoded_l = model(left_input)
     encoded_r = model(right_input)
 
-    # Add a customized layer to compute the absolute difference between the encodings
-    L1_layer = Lambda(lambda tensors:K.abs(tensors[0] - tensors[1]))
+    # Add a customized layer to compute the absolute difference between the encodings of shape (32, 48, 48)
+    def diff_encoding(tensors):
+        # convert (None, 32, 48, 48) to (None, 1, 48, 48) for input_1
+        temp1 = tensors[0][:, 1,: , :] + tensors[0][:, 15,: , :] + tensors[0][:, 21,: , :] + tensors[0][:, 26,: , :] + tensors[0][:, 28,: , :]
+        
+        # convert (None, 32, 48, 48) to (None, 1, 48, 48) for input_2
+        temp2 = tensors[1][:, 1,: , :] + tensors[1][:, 15,: , :] + tensors[1][:, 21,: , :] + tensors[1][:, 26,: , :] + tensors[1][:, 28,: , :]
+        
+        # convert (None, 1, 48, 48) to (None, 2304) for input_1
+        temp1_flatten = K.reshape(temp1, shape=[-1, 48*48])
+        # convert (None, 1, 48, 48) to (None, 2304) for input_2
+        temp2_flatten = K.reshape(temp2, shape=[-1, 48*48])
+        
+        # return absolute difference between two tensors
+        return K.abs(temp1_flatten - temp2_flatten)    
+    
+    L1_layer = Lambda(diff_encoding)
     L1_distance = L1_layer([encoded_l, encoded_r])
 
     # Add a dense layer with a sigmoid unit to generate the similarity score
@@ -217,15 +232,6 @@ def driver(rootdir):
             df = df.sort_values(by=["siamese_distance"])
             df.to_csv(destination + "\\" + query1 +".csv")
     
-    '''
-    img1_path = "..\\Dataset\\Duke-selected\\AMD1\\01.tif"
-    img1 = np.asarray(Image.open(img1_path))
-    
-    img2_path = "..\\Dataset\\Duke-selected\\NORMAL9\\01.tif"
-    img2 = np.asarray(Image.open(img2_path))
-    
-    print("return value : {}".format(compare(siamese_model, img1, img2)))
-    '''
 if __name__ == "__main__":
     driver("H:\\OCT retrieval\\Dataset\\Duke-selected-new\\")
 
