@@ -17,13 +17,22 @@ from tensorflow.keras.models import Model
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Lambda, Dense, Flatten
 from tensorflow.keras.regularizers import l2
+from tensorflow.random import set_seed
 import keras.backend as K
+
 
 # For image loading
 from PIL import Image
 
 # for sorting w.r.t siamese distance and saving as csv 
 import pandas as pd
+
+
+# setting seed for numpy module
+np.random.seed(2)
+
+# setting seed for tensoflow module
+set_seed(2)
 
 
 # checking tensorflow for GPU execution
@@ -151,11 +160,19 @@ def compare(model, input1, input2):
 def averageImage(dir):
     for subdir, dirs, files in os.walk(dir):
         # print(subdir, files)
-        total_image = np.zeros(shape=(496, 512))
-        for file in files:
-            img_path = os.path.join(subdir, file)
-            total_image = np.add(total_image, np.asarray(Image.open(img_path)))
-            
+        try:
+            total_image = np.zeros(shape=(496, 512))
+            for file in files:
+                img_path = os.path.join(subdir, file)
+                total_image = np.add(total_image, np.asarray(Image.open(img_path)))
+        except:
+            total_image = np.zeros(shape=(496, 768))
+            for file in files:
+                img_path = os.path.join(subdir, file)
+                total_image = np.add(total_image, np.asarray(Image.open(img_path)))
+                
+    if total_image.shape == (496, 768):
+        total_image = total_image[:, 128:(768-127)]
     return total_image/len(files)
         
 def calculateAvgPrecision(df, k):
@@ -174,12 +191,12 @@ def calculateReciprocalRank(df, k):
             return 1/(i+1)
     return 0
 
-def driver(rootdir):
+def driver(rootdir, destination):
     """driver program for OCT image retrieval using siamese net and saves the retieval result in csv file
 
     Args:
         rootdir ([string]): dataset directory
-
+        destination ([string]): result storage directory
     Returns:
         [type]: [description]
     """
@@ -190,7 +207,7 @@ def driver(rootdir):
     siamese_model.summary()
     APlist = []
     RRlist = []
-    destination = "..\\result\\seamese_net_avg_images\\" # + subdir1.split("\\")[-1]
+    # destination = "..\\result\\seamese_net_avg_images_seed_np_2_tf_2\\" # + subdir1.split("\\")[-1]
     for subdir1, dirs1, files1 in os.walk(rootdir):
 
         query1_name  = subdir1.split("\\")[-1]
@@ -202,9 +219,9 @@ def driver(rootdir):
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
         
         
-        if not subdir1.endswith("\\Duke-selected-new\\"):
+        if not subdir1.endswith("\\Duke-DME-Normal\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-selected-new\\"):
+                if not subdir2.endswith("\\Duke-DME-Normal\\"):
                     if (subdir1 != subdir2):
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
@@ -226,7 +243,7 @@ def driver(rootdir):
             
             APlist.append(calculateAvgPrecision(df, 3))
             RRlist.append(calculateReciprocalRank(df, 3))
-            
+            # print(APlist, RRlist)
             metric_result["query image"].append(query1_name)
             metric_result["k"].append(3)
             metric_result["average precision"].append(calculateAvgPrecision(df, 3))
@@ -243,17 +260,8 @@ def driver(rootdir):
     metric_df = pd.DataFrame(data=metric_result)
     metric_df.to_csv(destination + "\\" + "CBIR metric.csv")
     
-    '''
-    img1_path = "..\\Dataset\\Duke-selected\\AMD1\\01.tif"
-    img1 = np.asarray(Image.open(img1_path))
-    
-    img2_path = "..\\Dataset\\Duke-selected\\NORMAL9\\01.tif"
-    img2 = np.asarray(Image.open(img2_path))
-    
-    print("return value : {}".format(compare(siamese_model, img1, img2)))
-    '''
 if __name__ == "__main__":
-    driver("H:\\OCT retrieval\\Dataset\\Duke-selected-new\\")
+    driver("J:\\OCT retrieval\\Dataset\\Duke-DME-Normal\\", "..\\result\\seamese_net_avg_images_seed_np_2_tf_2\\")
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
