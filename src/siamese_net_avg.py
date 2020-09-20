@@ -28,11 +28,7 @@ from PIL import Image
 import pandas as pd
 
 
-# setting seed for numpy module
-np.random.seed(2)
 
-# setting seed for tensoflow module
-set_seed(2)
 
 
 # checking tensorflow for GPU execution
@@ -201,12 +197,23 @@ def driver(rootdir, destination):
         [type]: [description]
     """
     
-    metric_result = {"query image": [], "k": [], "average precision": [], "reciprocal rank": []}
+    metric_result = {"query image": [], 
+                     "k": [], 
+                     "reciprocal rank for k = 3": [],
+                     "average precision for k = 3": [], 
+                     "reciprocal rank for k = 5": [], 
+                     "average precision for k = 5": [], 
+                     "reciprocal rank for k = 7": [], 
+                     "average precision for k = 7": []}
     
     siamese_model = get_siamese(input_shape=(1, 48, 48))
     siamese_model.summary()
-    APlist = []
-    RRlist = []
+    APlist_3 = []
+    RRlist_3 = []
+    APlist_5 = []
+    RRlist_5 = []
+    APlist_7 = []
+    RRlist_7 = []
     # destination = "..\\result\\seamese_net_avg_images_seed_np_2_tf_2\\" # + subdir1.split("\\")[-1]
     for subdir1, dirs1, files1 in os.walk(rootdir):
 
@@ -241,27 +248,62 @@ def driver(rootdir, destination):
             df = df.sort_values(by=["siamese_distance"])
             df.to_csv(destination + "\\" + query1_name +".csv")
             
-            APlist.append(calculateAvgPrecision(df, 3))
-            RRlist.append(calculateReciprocalRank(df, 3))
+            APlist_3.append(calculateAvgPrecision(df, 3))
+            RRlist_3.append(calculateReciprocalRank(df, 3))
+            
+            APlist_5.append(calculateAvgPrecision(df, 5))
+            RRlist_5.append(calculateReciprocalRank(df, 5))
+            
+            APlist_7.append(calculateAvgPrecision(df, 7))
+            RRlist_7.append(calculateReciprocalRank(df, 7))
+            
             # print(APlist, RRlist)
             metric_result["query image"].append(query1_name)
-            metric_result["k"].append(3)
-            metric_result["average precision"].append(calculateAvgPrecision(df, 3))
-            metric_result["reciprocal rank"].append(calculateReciprocalRank(df, 3))
+            metric_result["k"].append("3, 5, 7")
+            metric_result["average precision for k = 3"].append(calculateAvgPrecision(df, 3))
+            metric_result["reciprocal rank for k = 3"].append(calculateReciprocalRank(df, 3))
             
+            metric_result["average precision for k = 5"].append(calculateAvgPrecision(df, 5))
+            metric_result["reciprocal rank for k = 5"].append(calculateReciprocalRank(df, 5))
             
-    print("Mean Average Precision (MAP) considering K = 3 : {}".format(sum(APlist)/len(APlist)))
-    print("Mean Reciprocal Rank (MRR) considering K = 3 : {}".format(sum(RRlist)/len(RRlist)))
+            metric_result["average precision for k = 7"].append(calculateAvgPrecision(df, 7))
+            metric_result["reciprocal rank for k = 7"].append(calculateReciprocalRank(df, 7))
+
+
+    print("Mean Average Precision (MAP) considering K = 3 : {}".format(sum(APlist_3)/len(APlist_3)))
+    print("Mean Reciprocal Rank (MRR) considering K = 3 : {}".format(sum(RRlist_3)/len(RRlist_3)))
+    
+    print("Mean Average Precision (MAP) considering K = 5 : {}".format(sum(APlist_5)/len(APlist_5)))
+    print("Mean Reciprocal Rank (MRR) considering K = 5 : {}".format(sum(RRlist_5)/len(RRlist_5)))
+    
+    print("Mean Average Precision (MAP) considering K = 7 : {}".format(sum(APlist_7)/len(APlist_7)))
+    print("Mean Reciprocal Rank (MRR) considering K = 7 : {}".format(sum(RRlist_7)/len(RRlist_7)))
     
     metric_result["query image"].append("Average MAP and MRR")
-    metric_result["k"].append(3)
-    metric_result["average precision"].append(sum(APlist)/len(APlist))
-    metric_result["reciprocal rank"].append(sum(RRlist)/len(RRlist))
+    metric_result["k"].append("3, 5, 7")
+    metric_result["average precision for k = 3"].append(sum(APlist_3)/len(APlist_3))
+    metric_result["reciprocal rank for k = 3"].append(sum(RRlist_3)/len(RRlist_3))
+    
+    metric_result["average precision for k = 5"].append(sum(APlist_5)/len(APlist_5))
+    metric_result["reciprocal rank for k = 5"].append(sum(RRlist_5)/len(RRlist_5))
+    
+    metric_result["average precision for k = 7"].append(sum(APlist_7)/len(APlist_7))
+    metric_result["reciprocal rank for k = 7"].append(sum(RRlist_7)/len(RRlist_7))
+    
     metric_df = pd.DataFrame(data=metric_result)
     metric_df.to_csv(destination + "\\" + "CBIR metric.csv")
     
+    del siamese_model
+    
 if __name__ == "__main__":
-    driver("J:\\OCT retrieval\\Dataset\\Duke-DME-Normal\\", "..\\result\\seamese_net_avg_images_seed_np_2_tf_2\\")
+    for i in range(2, 3):  # iterating over np seed
+        for j in range(3): # iterating over tf seed
+            # setting seed for numpy module
+            np.random.seed(i)
+
+            # setting seed for tensoflow module
+            set_seed(j)
+            driver("J:\\OCT retrieval\\Dataset\\Duke-DME-Normal\\", "..\\result\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
