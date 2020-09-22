@@ -239,9 +239,9 @@ def driver(rootdir, destination):
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
         
         
-        if not subdir1.endswith("\\Duke-AMD-Normal\\"):
+        if not subdir1.endswith("\\Duke-AMD-DME\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-AMD-Normal\\"):
+                if not subdir2.endswith("\\Duke-AMD-DME\\"):
                     if (subdir1 != subdir2):
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
@@ -309,7 +309,7 @@ def driver(rootdir, destination):
     del siamese_model
     
 if __name__ == "__main__":
-    for i in range(2, 3):  # iterating over np seed
+    for i in range(0, 1):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
