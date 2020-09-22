@@ -154,21 +154,34 @@ def compare(model, input1, input2):
 
 
 def averageImage(dir):
+    total_image = np.zeros(shape=(496, 512))
     for subdir, dirs, files in os.walk(dir):
         # print(subdir, files)
-        try:
-            total_image = np.zeros(shape=(496, 512))
-            for file in files:
-                img_path = os.path.join(subdir, file)
-                total_image = np.add(total_image, np.asarray(Image.open(img_path)))
-        except:
-            total_image = np.zeros(shape=(496, 768))
-            for file in files:
-                img_path = os.path.join(subdir, file)
-                total_image = np.add(total_image, np.asarray(Image.open(img_path)))
+        # try:
+        
+        for file in files:
+            img_path = os.path.join(subdir, file)
+            img = np.asarray(Image.open(img_path))
+            
+            delta_height = img.shape[0] - total_image.shape[0]
+            delta_width = img.shape[1] - total_image.shape[1]
+            
+            
+            delta_left = delta_width//2 if not delta_width%2 else (delta_width//2+1)
+            delta_right = delta_width//2
+            delta_top = delta_height//2 if not delta_height%2 else (delta_height//2+1)
+            delta_bottom = delta_height//2
+            
+            # print(img.shape, delta_top, delta_bottom, delta_left, delta_right)
+            total_image = np.add(total_image, img[delta_top: (img.shape[0]-delta_bottom), delta_left:(img.shape[1]-delta_right)])
+    #     except:
+    #         total_image = np.zeros(shape=(496, 768))
+    #         for file in files:
+    #             img_path = os.path.join(subdir, file)
+    #             total_image = np.add(total_image, np.asarray(Image.open(img_path)))
                 
-    if total_image.shape == (496, 768):
-        total_image = total_image[:, 128:(768-127)]
+    # if total_image.shape == (496, 768):
+    #     total_image = total_image[:, 128:(768-127)]
     return total_image/len(files)
         
 def calculateAvgPrecision(df, k):
@@ -226,9 +239,9 @@ def driver(rootdir, destination):
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
         
         
-        if not subdir1.endswith("\\Duke-DME-Normal\\"):
+        if not subdir1.endswith("\\Duke-AMD-Normal\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-DME-Normal\\"):
+                if not subdir2.endswith("\\Duke-AMD-Normal\\"):
                     if (subdir1 != subdir2):
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
@@ -297,13 +310,13 @@ def driver(rootdir, destination):
     
 if __name__ == "__main__":
     for i in range(2, 3):  # iterating over np seed
-        for j in range(3): # iterating over tf seed
+        for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
 
             # setting seed for tensoflow module
             set_seed(j)
-            driver("J:\\OCT retrieval\\Dataset\\Duke-DME-Normal\\", "..\\result\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
+            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-Normal\\", "..\\result\\Duke-AMD-Normal\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
