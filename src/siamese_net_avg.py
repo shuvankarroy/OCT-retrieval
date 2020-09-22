@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
             # setting seed for tensoflow module
             set_seed(j)
-            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-Normal\\", "..\\result\\Duke-AMD-Normal\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
+            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-DME\\", "..\\result\\Duke-AMD-DME\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
