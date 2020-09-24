@@ -239,9 +239,9 @@ def driver(rootdir, destination):
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
         
         
-        if not subdir1.endswith("\\Duke-AMD-DME\\"):
+        if not subdir1.endswith("\\Duke-AMD-DME-Normal\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-AMD-DME\\"):
+                if not subdir2.endswith("\\Duke-AMD-DME-Normal\\"):
                     if (subdir1 != subdir2):
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
@@ -309,14 +309,14 @@ def driver(rootdir, destination):
     del siamese_model
     
 if __name__ == "__main__":
-    for i in range(0, 1):  # iterating over np seed
+    for i in range(2, 3):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
 
             # setting seed for tensoflow module
             set_seed(j)
-            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-DME\\", "..\\result\\Duke-AMD-DME\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
+            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-DME-Normal\\", "..\\result\\Duke-AMD-DME-Normal\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
