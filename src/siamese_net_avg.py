@@ -200,7 +200,7 @@ def calculateReciprocalRank(df, k):
             return 1/(i+1)
     return 0
 
-def driver(rootdir, destination):
+def driver(rootdir, destination, dataset_name):
     """driver program for OCT image retrieval using siamese net and saves the retieval result in csv file
 
     Args:
@@ -242,9 +242,9 @@ def driver(rootdir, destination):
         result = {"query1": [], "query2":[], "size": [], "siamese_distance": [], "time": []}
         
         
-        if not subdir1.endswith("\\Duke-AMD-DME-Normal\\"):
+        if not subdir1.endswith("\\"+ dataset_name +"\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
-                if not subdir2.endswith("\\Duke-AMD-DME-Normal\\"):
+                if not subdir2.endswith("\\"+ dataset_name +"\\"):
                     if (subdir1 != subdir2):
                         
                         start_per_image = time.time()
@@ -322,14 +322,15 @@ def driver(rootdir, destination):
     del siamese_model
     
 if __name__ == "__main__":
-    for i in range(0, 1):  # iterating over np seed
+    dataset_name = "Duke-AMD-Normal"
+    for i in range(2, 3):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
 
             # setting seed for tensoflow module
             set_seed(j)
-            driver("J:\\OCT retrieval\\Dataset\\Duke-AMD-DME-Normal\\", "..\\result\\Duke-AMD-DME-Normal\\seamese_net_avg_images_seed_np_{}_tf_{}_for_k_3_5_7\\".format(i, j))
+            driver(f"J:\\OCT retrieval\\Dataset\\{dataset_name}\\", f"..\\result\\{dataset_name}\\seamese_net_avg_images_seed_np_{i}_tf_{j}_for_k_3_5_7\\", dataset_name)
 
     # reporting end of program execution by beep sound
     winsound.Beep(2500, 4000)
