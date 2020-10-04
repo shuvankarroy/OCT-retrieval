@@ -322,7 +322,7 @@ def driver(rootdir, destination, dataset_name):
     del siamese_model
     
 if __name__ == "__main__":
-    dataset_name = "Duke-AMD-Normal"
+    dataset_name = "Duke-DME-Normal"
     for i in range(0, 1):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
