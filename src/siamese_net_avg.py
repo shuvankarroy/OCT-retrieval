@@ -27,7 +27,8 @@ from PIL import Image
 # for sorting w.r.t siamese distance and saving as csv 
 import pandas as pd
 
-
+# for capturing timing
+import time
 
 
 
@@ -187,14 +188,13 @@ def averageImage(dir):
 def calculateAvgPrecision(df, k):
     total_true = 0
     for i in range(k):
-        print(df['query1'].iloc[0], df['query2'].iloc[i])
+        # print(df['query1'].iloc[0], df['query2'].iloc[i])
         if df['query1'].iloc[0][0] == df['query2'].iloc[i][0]:
             total_true += 1
-    print(df["query1"][0], total_true)
+    # print(df["query1"][0], total_true)
     return total_true/k         
 
 def calculateReciprocalRank(df, k):
-    total_true = 0
     for i in range(k):
         if df['query1'].iloc[0][0] == df['query2'].iloc[i][0]:
             return 1/(i+1)
@@ -217,7 +217,8 @@ def driver(rootdir, destination):
                      "reciprocal rank for k = 5": [], 
                      "average precision for k = 5": [], 
                      "reciprocal rank for k = 7": [], 
-                     "average precision for k = 7": []}
+                     "average precision for k = 7": [],
+                     "time in seconds": []}
     
     siamese_model = get_siamese(input_shape=(1, 48, 48))
     siamese_model.summary()
@@ -228,21 +229,26 @@ def driver(rootdir, destination):
     APlist_7 = []
     RRlist_7 = []
     # destination = "..\\result\\seamese_net_avg_images_seed_np_2_tf_2\\" # + subdir1.split("\\")[-1]
+    
+    
     for subdir1, dirs1, files1 in os.walk(rootdir):
-
+        start = time.time()
         query1_name  = subdir1.split("\\")[-1]
         
         os.makedirs(destination, exist_ok=True)
         
         query1 = averageImage(subdir1)
         
-        result = {"query1": [], "query2":[], "size": [], "siamese_distance": []}
+        result = {"query1": [], "query2":[], "size": [], "siamese_distance": [], "time": []}
         
         
         if not subdir1.endswith("\\Duke-AMD-DME-Normal\\"):
             for subdir2, dirs2, files2 in os.walk(rootdir):
                 if not subdir2.endswith("\\Duke-AMD-DME-Normal\\"):
                     if (subdir1 != subdir2):
+                        
+                        start_per_image = time.time()
+                        
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
                         
@@ -250,13 +256,15 @@ def driver(rootdir, destination):
                         
                         siamese_distance = compare(siamese_model, query1, query2)
                         # print("siamese_distance between {} and {} value : {}".format(query1_name, query2_name, siamese_distance))
+                        end_per_image = time.time()
                         
                         result["query1"].append(query1_name)
                         result["query2"].append(query2_name)
                         result["size"].append((496, 512))
                         result["siamese_distance"].append(siamese_distance)
-        
-        #save result tp csv file sorted w.r.t siamese_distance
+                        result["time"].append(end_per_image - start_per_image)
+                        
+            #save result tp csv file sorted w.r.t siamese_distance
             df = pd.DataFrame(data=result)
             df = df.sort_values(by=["siamese_distance"])
             df.to_csv(destination + "\\" + query1_name +".csv")
@@ -271,6 +279,7 @@ def driver(rootdir, destination):
             RRlist_7.append(calculateReciprocalRank(df, 7))
             
             # print(APlist, RRlist)
+            end = time.time()
             metric_result["query image"].append(query1_name)
             metric_result["k"].append("3, 5, 7")
             metric_result["average precision for k = 3"].append(calculateAvgPrecision(df, 3))
@@ -281,8 +290,8 @@ def driver(rootdir, destination):
             
             metric_result["average precision for k = 7"].append(calculateAvgPrecision(df, 7))
             metric_result["reciprocal rank for k = 7"].append(calculateReciprocalRank(df, 7))
-
-
+            metric_result["time in seconds"].append(end - start)
+    
     print("Mean Average Precision (MAP) considering K = 3 : {}".format(sum(APlist_3)/len(APlist_3)))
     print("Mean Reciprocal Rank (MRR) considering K = 3 : {}".format(sum(RRlist_3)/len(RRlist_3)))
     
@@ -303,13 +312,17 @@ def driver(rootdir, destination):
     metric_result["average precision for k = 7"].append(sum(APlist_7)/len(APlist_7))
     metric_result["reciprocal rank for k = 7"].append(sum(RRlist_7)/len(RRlist_7))
     
+    
+    metric_result["time in seconds"].append(sum(metric_result["time in seconds"]))
+    
+    
     metric_df = pd.DataFrame(data=metric_result)
     metric_df.to_csv(destination + "\\" + "CBIR metric.csv")
     
     del siamese_model
     
 if __name__ == "__main__":
-    for i in range(2, 3):  # iterating over np seed
+    for i in range(0, 1):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
