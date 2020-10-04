@@ -323,7 +323,7 @@ def driver(rootdir, destination, dataset_name):
     
 if __name__ == "__main__":
     dataset_name = "Duke-AMD-Normal"
-    for i in range(2, 3):  # iterating over np seed
+    for i in range(0, 1):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
