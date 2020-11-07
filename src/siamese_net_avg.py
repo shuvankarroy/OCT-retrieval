@@ -13,6 +13,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 
 # elementary model layers for seamese model construction
+# import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Lambda, Dense, Flatten
@@ -30,15 +31,20 @@ import pandas as pd
 # for capturing timing
 import time
 
-
+# for capturing cmd line arguments
+import sys
 
 # checking tensorflow for GPU execution
 # gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 # print("Available GPU : {}".format(gpu_devices))
 
-#  setting GPU memory growth
+# setting GPU memory growth
 # for device in gpu_devices:
 #     tf.config.experimental.set_memory_growth(device, True)
+
+# Global variables 
+metric_result = None
+result = None
 
 
 def initialize_weights(shape, dtype, name=None):
@@ -148,13 +154,29 @@ def compare(model, input1, input2):
     Returns:
         np.sum(pred) ([float32]): sum of siamese distance returned by model.predict
     """    
+    patch_image_time_start = time.time()
     input1_patches = get_patches_non_overlap(input1, 48, 48)
     input2_patches = get_patches_non_overlap(input2, 48, 48)
+    patch_image_time_end = time.time()
+    compare_image_time_start = time.time()
     pred = model.predict([input1_patches, input2_patches])
+    compare_image_time_end = time.time()
+
+    result["patch_retrieval_time"].append(patch_image_time_end - patch_image_time_start)
+    result["image_comparison_time"].append(compare_image_time_end - compare_image_time_start)
+
     return np.sum(pred)
 
 
 def averageImage(dir):
+    """return average of n frames present in the source directory
+
+    Args:
+        dir (str): source directory
+
+    Returns:
+        numpy.array: numpy array containing average image
+    """    
     total_image = np.zeros(shape=(496, 512))
     for subdir, dirs, files in os.walk(dir):
         # print(subdir, files)
@@ -209,7 +231,8 @@ def driver(rootdir, destination, dataset_name):
     Returns:
         [type]: [description]
     """
-    
+    global metric_result 
+    global result
     metric_result = {"query image": [], 
                      "k": [], 
                      "reciprocal rank for k = 3": [],
@@ -237,9 +260,11 @@ def driver(rootdir, destination, dataset_name):
         
         os.makedirs(destination, exist_ok=True)
         
+        query1_average_image_time_start = time.time()
         query1 = averageImage(subdir1)
+        query1_average_image_time_end = time.time()
         
-        result = {"query1": [], "query2":[], "size": [], "siamese_distance": [], "time": []}
+        result = {"query1": [], "query2":[], "size": [], "siamese_distance": [], "average_image_time_query1": [], "average_image_time_query2": [], "patch_retrieval_time": [], "image_comparison_time": [],"total_time": []}
         
         
         if not subdir1.endswith("\\"+ dataset_name +"\\"):
@@ -252,8 +277,10 @@ def driver(rootdir, destination, dataset_name):
                         query2_name  = subdir2.split("\\")[-1]
                         # print(subdir1, subdir2)
                         
+                        query2_average_image_time_start = time.time()
                         query2 = averageImage(subdir2)
-                        
+                        query2_average_image_time_end = time.time()
+
                         siamese_distance = compare(siamese_model, query1, query2)
                         # print("siamese_distance between {} and {} value : {}".format(query1_name, query2_name, siamese_distance))
                         end_per_image = time.time()
@@ -262,7 +289,9 @@ def driver(rootdir, destination, dataset_name):
                         result["query2"].append(query2_name)
                         result["size"].append((496, 512))
                         result["siamese_distance"].append(siamese_distance)
-                        result["time"].append(end_per_image - start_per_image)
+                        result["average_image_time_query1"].append(query1_average_image_time_end - query1_average_image_time_start)
+                        result["average_image_time_query2"].append(query2_average_image_time_end - query2_average_image_time_start)
+                        result["total_time"].append(end_per_image - start_per_image)
                         
             #save result tp csv file sorted w.r.t siamese_distance
             df = pd.DataFrame(data=result)
@@ -290,7 +319,7 @@ def driver(rootdir, destination, dataset_name):
             
             metric_result["average precision for k = 7"].append(calculateAvgPrecision(df, 7))
             metric_result["reciprocal rank for k = 7"].append(calculateReciprocalRank(df, 7))
-            metric_result["time in seconds"].append(end - start)
+            metric_result["time in seconds"].append((end - start))
     
     print("Mean Average Precision (MAP) considering K = 3 : {}".format(sum(APlist_3)/len(APlist_3)))
     print("Mean Reciprocal Rank (MRR) considering K = 3 : {}".format(sum(RRlist_3)/len(RRlist_3)))
@@ -322,8 +351,9 @@ def driver(rootdir, destination, dataset_name):
     del siamese_model
     
 if __name__ == "__main__":
-    dataset_name = "Duke-DME-Normal"
-    for i in range(2, 3):  # iterating over np seed
+    # print(sys.argv)
+    dataset_name = sys.argv[1]
+    for i in range(int(sys.argv[2]), int(sys.argv[3])):  # iterating over np seed
         for j in range(0, 3): # iterating over tf seed
             # setting seed for numpy module
             np.random.seed(i)
