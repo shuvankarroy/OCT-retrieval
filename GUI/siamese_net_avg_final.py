@@ -227,6 +227,8 @@ def calculateReciprocalRank(df, k):
 
 def driver_single_image(query_img_path, rootdir, destination, dataset_name, np_seed, tf_seed):
 
+    # global np_seed
+    # global tf_seed
     np.random.seed(np_seed)
     # setting seed for tensoflow module
     set_seed(tf_seed)

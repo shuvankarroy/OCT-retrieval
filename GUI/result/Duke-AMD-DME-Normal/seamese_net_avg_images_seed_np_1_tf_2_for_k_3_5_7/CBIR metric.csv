@@ -1,0 +1,2 @@
+,query image,k,precision for k = 3,reciprocal rank for k = 3,precision for k = 5,reciprocal rank for k = 5,precision for k = 7,reciprocal rank for k = 7,time in seconds
+0,DME11,"3, 5, 7",0.0,0,0.0,0,0.14285714285714285,0.16666666666666666,23.4648916721344

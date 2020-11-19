@@ -1,0 +1,2 @@
+,query image,k,precision for k = 3,reciprocal rank for k = 3,precision for k = 5,reciprocal rank for k = 5,precision for k = 7,reciprocal rank for k = 7,time in seconds
+0,NORMAL5,"3, 5, 7",0.0,0,0.0,0,0.0,0,18.193975687026978
