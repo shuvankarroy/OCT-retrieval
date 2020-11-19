@@ -1,0 +1,2 @@
+,query image,k,precision for k = 3,reciprocal rank for k = 3,precision for k = 5,reciprocal rank for k = 5,precision for k = 7,reciprocal rank for k = 7,time in seconds
+0,AMD1,"3, 5, 7",0.6666666666666666,1.0,0.4,1.0,0.42857142857142855,1.0,30.498835802078247
